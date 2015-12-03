@@ -369,7 +369,7 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         // Get packages file from web server and put in cache file
         file_put_contents(
             $this->getPackageCache(),
-            file_get_contents("http://pxe.omv-extras.org/packages")
+            file_get_contents("http://UniverseNAS.0rca.ch/sources/pxe-packages.list")
         );
     }
 

@@ -128,7 +128,7 @@ package()
     rm -f "${PXE_PATH}"/config.txt
 
     # download package
-    wget http://pxe.omv-extras.org/${package} -P "${PXE_PATH}"
+    wget ${package} -P "${PXE_PATH}"
 
     # Check to see if downloaded package exists
     if [ ! -f "${PXE_PATH}/${package}" ]; then
