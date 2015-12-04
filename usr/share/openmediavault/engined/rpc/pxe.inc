@@ -433,35 +433,40 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
         // add info from config.txt to entries
         $configTxt = "/tmp/pxeinstall/config.txt";
-        $file = explode("\n", file_get_contents($configTxt));
+		if (file_exists($configTxt)) {
+			
+			$file = explode("\n", file_get_contents($configTxt));
 
-        $label  = trim(preg_replace("/LABEL/", "", $file[0], 1));
-        $kernel = trim(preg_replace("/KERNEL/", "", $file[1], 1));
-        $append = trim(preg_replace("/APPEND/", "", $file[2], 1));
+	        $label  = trim(preg_replace("/LABEL/", "", $file[0], 1));
+	        $kernel = trim(preg_replace("/KERNEL/", "", $file[1], 1));
+	        $append = trim(preg_replace("/APPEND/", "", $file[2], 1));
+
+	        // Replace <Your_IP_Address>:<Your_NFS_Export> with select IP address and nfs export dir
+	        $append = str_replace("<Your_IP_Address>", $params['address'], $append);
+
+	        if ( !empty($dir))
+	            $append = str_replace("<Your_NFS_Export>", $dir, $append);
+
+	        $object = array(
+	            "uuid"   => $GLOBALS['OMV_UUID_UNDEFINED'],
+	            "enable" => true,
+	            "group"  => "Default",
+	            "label"  => $label,
+	            "menu"   => "",
+	            "kernel" => $kernel,
+	            "append" => $append
+	        );
+
+	        $this->setEntry($object, $context);
+
+	        // remove config.txt
+	        unlink($configTxt);
+
+	        $cmd = "omv-mkconf pxe update 2>&1";
+	        OMVUtil::exec($cmd, $output, $result);
+			
+		}
         
-        // Replace <Your_IP_Address>:<Your_NFS_Export> with select IP address and nfs export dir
-        $append = str_replace("<Your_IP_Address>", $params['address'], $append);
-
-        if ( !empty($dir))
-            $append = str_replace("<Your_NFS_Export>", $dir, $append);
-
-        $object = array(
-            "uuid"   => $GLOBALS['OMV_UUID_UNDEFINED'],
-            "enable" => true,
-            "group"  => "Default",
-            "label"  => $label,
-            "menu"   => "",
-            "kernel" => $kernel,
-            "append" => $append
-        );
-
-        $this->setEntry($object, $context);
-
-        // remove config.txt
-        unlink($configTxt);
-
-        $cmd = "omv-mkconf pxe update 2>&1";
-        OMVUtil::exec($cmd, $output, $result);
     }
 
     public function getIPAddresses($params, $context)
