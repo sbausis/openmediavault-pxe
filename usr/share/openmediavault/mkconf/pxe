@@ -119,28 +119,35 @@ package()
 {
     export LANG=C
 
-    templocation="/tmp/pxeinstall/"
+    templocation="/tmp/pxeinstall"
 
     # make temp directory
-    mkdir -p "${templocation}"
+    rm -Rf ${templocation}
+	mkdir -p "${templocation}/pxe"
 
-    # remove existing config.txt (if any)
-    rm -f "${PXE_PATH}"/config.txt
+	package_url="${package}"
+	package=$(basename "${package}")
 
     # download package
-    wget ${package} -P "${PXE_PATH}"
+    wget ${package_url} -O "${templocation}/${package}"
 
     # Check to see if downloaded package exists
-    if [ ! -f "${PXE_PATH}/${package}" ]; then
+    if [ ! -f "${templocation}/${package}" ]; then
         echo "${package} was not downloaded."
         exit 1
     fi
 
     # unzip package
-    tar xvzf "${PXE_PATH}/${package}" -C "${PXE_PATH}"
+    tar xvzf "${templocation}/${package}" -C "${templocation}/pxe"
+
+	if [ -f "${templocation}/pxe/config.sh" ]; then
+		(cd ${templocation}/pxe && /bin/bash ${templocation}/pxe/config.sh)
+	fi
 
     # put config.txt in temp directory
-    mv -f "${PXE_PATH}"/config.txt "${templocation}"
+    mv -f "${templocation}/pxe/config.txt" "${templocation}"
+
+	cp -Rf ${templocation}/pxe/* ${PXE_PATH}/
 
     # remove downloaded package file
     rm -f "${PXE_PATH}/${package}"
