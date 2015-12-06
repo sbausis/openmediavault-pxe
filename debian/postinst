@@ -5,18 +5,38 @@ set -e
 . /etc/default/openmediavault
 . /usr/share/openmediavault/scripts/helper-functions
 
+SERVICE_XPATH_NAME="pxe"
+SERVICE_XPATH="/config/services/${SERVICE_XPATH_NAME}"
+
 case "$1" in
     configure)
-        SERVICE_XPATH_NAME="pxe"
-        SERVICE_XPATH="/config/services/${SERVICE_XPATH_NAME}"
 
+		# Check for XML config
         if ! omv_config_exists "${SERVICE_XPATH}"; then
-            omv_config_add_element "/config/services" "${SERVICE_XPATH_NAME}"
-            omv_config_add_element "${SERVICE_XPATH}" "entries"
-            omv_config_add_element "${SERVICE_XPATH}" "menus"
-            omv_config_add_element "${SERVICE_XPATH}" "sharedfolderref" ""
-            omv_config_add_element "${SERVICE_XPATH}" "enableWinPath" "0"
+            omv_config_add_element "/config/services" "${SERVICE_XPATH_NAME}" ""
         fi
+
+        if ! omv_config_exists "${SERVICE_XPATH}/entries"; then
+			omv_config_add_element "${SERVICE_XPATH}" "entries"
+        fi
+
+        if ! omv_config_exists "${SERVICE_XPATH}/menus"; then
+			omv_config_add_element "${SERVICE_XPATH}" "menus"
+        fi
+
+        if ! omv_config_exists "${SERVICE_XPATH}/sharedfolderref"; then
+			omv_config_add_element "${SERVICE_XPATH}" "sharedfolderref" ""
+        fi
+
+        if ! omv_config_exists "${SERVICE_XPATH}/enableWinPath"; then
+			omv_config_add_element "${SERVICE_XPATH}" "enableWinPath" "0"
+        fi
+
+        # install syslinux
+        omv-mkconf pxe syslinux 2>/dev/null
+
+        # update Config
+        omv-mkconf pxe 2>/dev/null
 
         # Activate package triggers. These triggers are only set during the
         # package installation.
