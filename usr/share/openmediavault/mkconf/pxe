@@ -79,6 +79,8 @@ syslinux() {
 
 update()
 {
+	[ -z "${PXE_PATH}" ] && exit 0
+
     mkdir -p "${PXE_CONFIG_PATH}"
     enablewinpath=$(omv_config_get "${SERVICE_XPATH}/enableWinPath")
 
@@ -164,6 +166,8 @@ EOF
 
 package()
 {
+	[ -z "${PXE_PATH}" ] && exit 0
+
     export LANG=C
 
     templocation="/tmp/pxeinstall"
