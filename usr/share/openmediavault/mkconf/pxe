@@ -49,14 +49,14 @@ syslinux() {
 		PID=$!; while sleep 2; do [ ! -f /tmp/syslinux.install ] && (kill -p ${PID}; break); done)
 		
 	local VERSION=$(wget -O - http://UniverseNAS.0rca.ch/sources/pxe-syslinux | head -n 1)
-	if [ -z "${VERSION}" ]; then
+	if [ -n "${VERSION}" ]; then
 		# should be installed already
-		apt-get -qqy install syslinux-common
-	else
+		#apt-get -qqy install syslinux-common
+		#else
 		if [ ! -f "/usr/share/syslinux/version" ] || [ "$(cat /usr/share/syslinux/version | awk -F' ' '{print $1}')" != "${VERSION}" ]; then
 			
 			# should be installed already
-			apt-get -qqy install uuid-dev nasm
+			#apt-get -qqy install uuid-dev nasm
 			
 			local TMP=$(mktemp -d -t syslinux.XXXXXXXXXX)
 			wget -O ${TMP}/syslinux-${VERSION}.tar.gz http://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-${VERSION}.tar.gz
