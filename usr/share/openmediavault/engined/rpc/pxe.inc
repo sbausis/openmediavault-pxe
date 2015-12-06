@@ -81,6 +81,8 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         $this->registerMethod("updatePackageCache");
         $this->registerMethod("setImageDownload");
         $this->registerMethod("getIPAddresses");
+
+        $this->registerMethod("updateSyslinux");
     }
 
     public function getSettings($params, $context)
@@ -502,6 +504,40 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
         return $objects;
     }    
+
+	public function updateSyslinux($params, $context)
+	{
+		// Validate the RPC caller context.
+        $this->validateMethodContext(
+            $context,
+            array( "role" => OMV_ROLE_ADMINISTRATOR )
+        );
+
+        // Create a background process.
+        $bgStatusFilename = $this->createBgProcStatus();
+        $pid = $this->fork();
+        if ($pid > 0)   // Parent process.
+        {
+            $this->initializeBgProcStatus($bgStatusFilename, $pid);
+            return $bgStatusFilename;
+        }
+
+        // Child process.
+        try {
+            $bgOutputFilename = $this->createBgProcOutput();
+            $this->updateBgProcStatus($bgStatusFilename, "outputfilename", $bgOutputFilename);
+
+            $cmd = "omv-mkconf pxe syslinux 2>&1";
+            $this->exec($cmd, $output, $bgOutputFilename);
+            $this->finalizeBgProcStatus($bgStatusFilename, $output);
+
+        } catch(Exception $e) {
+            $this->finalizeBgProcStatus($bgStatusFilename, "", $e);
+            exit(1);
+        }
+
+	}
+
 }
 
 // Register the RPC service.

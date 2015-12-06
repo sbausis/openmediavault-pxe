@@ -91,7 +91,7 @@ EOF
     fi
     invoke-rc.d tftpd-hpa restart
 
-	syslinux
+	#syslinux
     cp -f `syslinux_path`/vesamenu.c32 "${PXE_PATH}"
     cp -f `syslinux_path`/pxelinux.0 "${PXE_PATH}"
 

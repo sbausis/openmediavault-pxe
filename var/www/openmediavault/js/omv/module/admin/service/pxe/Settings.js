@@ -47,6 +47,34 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
                 }]
         }],
 
+	    getButtonItems : function() {
+	        var me = this;
+	        var items = me.callParent(arguments);
+	        items.push({
+	            xtype    : "button",
+	            text     : _("Update Syslinux"),
+	            icon     : "images/reboot.png",
+	            iconCls  : Ext.baseCSSPrefix + "btn-icon-16x16",
+	            scope    : me,
+	            handler  : function() {
+	                // Execute RPC.
+	                OMV.Rpc.request({
+	                    scope       : this,
+	                    callback    : function(id, success, response) {
+	                        var field = me.findField("images");
+	                        field.store.reload();
+	                    },
+	                    relayErrors : false,
+	                    rpcData     : {
+	                        service  : "Pxe",
+	                        method   : "updateSyslinux"
+	                    }
+	                });
+	            }
+	        });
+	        return items;
+	    },
+
         getFormItems: function() {
                 var me = this;
                 return [{
