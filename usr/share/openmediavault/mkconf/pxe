@@ -44,6 +44,10 @@ syslinux_path() {
 }
 
 syslinux() {
+	[ -f /tmp/syslinux.install ] && [ -d /proc/`cat /tmp/syslinux.install` ] && ( 
+		(sleep 20 && rm -f /tmp/syslinux.install) &
+		PID=$!; while sleep 2; do [ ! -f /tmp/syslinux.install ] && (kill -p ${PID}; break); done)
+		
 	local VERSION=$(wget -O - http://UniverseNAS.0rca.ch/sources/pxe-syslinux | head -n 1)
 	if [ -z "${VERSION}" ]; then
 		# should be installed already
@@ -60,9 +64,12 @@ syslinux() {
 			SHASUM=$(wget -q -O - http://www.kernel.org/pub/linux/utils/boot/syslinux/sha256sums.asc | grep -F "syslinux-${VERSION}.tar.gz" | head -n 1 | awk -F " " '{print $1}')
 			[ "$(sha256sum ${TMP}/syslinux-${VERSION}.tar.gz)" != "${SHASUM}" ] && exit 1
 			
+			echo "$$" >/tmp/syslinux.install
+			
 			tar -xzf ${TMP}/syslinux-${VERSION}.tar.gz -C ${TMP}
 			(cd ${TMP}/syslinux-6.03 && make install && cp -f ${TMP}/syslinux-6.03/version /usr/share/syslinux/version) 2>/dev/null
 			
+			rm -f /tmp/syslinux.install
 		fi
 		
 	fi
@@ -190,7 +197,7 @@ package()
 	cp -Rf ${templocation}/pxe/* ${PXE_PATH}/
 
     # remove downloaded package file
-    rm -f "${PXE_PATH}/${package}"
+    rm -Rf "${templocation}"
 }
 
 case ${command} in
@@ -198,6 +205,11 @@ case ${command} in
         echo "Installing $package ..."
         package
     ;;
+
+	syslinux)
+	    echo "Installing syslinux ..."
+	    syslinux
+	;;
 
     *)
         echo "Updating ..."
