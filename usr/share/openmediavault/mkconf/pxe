@@ -97,6 +97,10 @@ EOF
     cp -f `syslinux_path`/vesamenu.c32 "${PXE_PATH}"
     cp -f `syslinux_path`/pxelinux.0 "${PXE_PATH}"
 
+	[ -f `syslinux_path`/ldlinux.c32 ] && cp -f `syslinux_path`/ldlinux.c32 "${PXE_PATH}"
+	[ -f `syslinux_path`/libcom32.c32 ] && cp -f `syslinux_path`/libcom32.c32 "${PXE_PATH}"
+	[ -f `syslinux_path`/libutil.c32 ] && cp -f `syslinux_path`/libutil.c32 "${PXE_PATH}"
+
     rm -f ${PXE_CONFIG}.*
 
     timeout="$(omv_config_get "${SERVICE_XPATH}/timeout")"
