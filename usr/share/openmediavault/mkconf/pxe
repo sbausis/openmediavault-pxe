@@ -190,7 +190,7 @@ package()
 	cp -Rf ${templocation}/pxe/* ${PXE_PATH}/
 
     # remove downloaded package file
-    rm -f "${PXE_PATH}/${package}"
+    rm -Rf "${templocation}"
 }
 
 case ${command} in
@@ -198,6 +198,11 @@ case ${command} in
         echo "Installing $package ..."
         package
     ;;
+
+	syslinux)
+	    echo "Installing syslinux ..."
+	    syslinux
+	;;
 
     *)
         echo "Updating ..."
