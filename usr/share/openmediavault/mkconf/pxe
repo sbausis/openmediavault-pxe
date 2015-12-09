@@ -43,6 +43,8 @@ syslinux_path() {
 	fi
 }
 
+SYSLINUX_PATH=$(syslinux_path)
+
 syslinux() {
 	[ -f /tmp/syslinux.install ] && [ -d /proc/`cat /tmp/syslinux.install` ] && ( 
 		(sleep 20 && rm -f /tmp/syslinux.install) &
@@ -94,12 +96,12 @@ EOF
     invoke-rc.d tftpd-hpa restart
 
 	#syslinux
-    cp -f `syslinux_path`/vesamenu.c32 "${PXE_PATH}"
-    cp -f `syslinux_path`/pxelinux.0 "${PXE_PATH}"
+    cp -f ${SYSLINUX_PATH}/vesamenu.c32 "${PXE_PATH}/"
+    cp -f ${SYSLINUX_PATH}/pxelinux.0 "${PXE_PATH}/"
 
-	[ -f `syslinux_path`/ldlinux.c32 ] && cp -f `syslinux_path`/ldlinux.c32 "${PXE_PATH}"
-	[ -f `syslinux_path`/libcom32.c32 ] && cp -f `syslinux_path`/libcom32.c32 "${PXE_PATH}"
-	[ -f `syslinux_path`/libutil.c32 ] && cp -f `syslinux_path`/libutil.c32 "${PXE_PATH}"
+	[ -f ${SYSLINUX_PATH}/ldlinux.c32 ] && cp -f ${SYSLINUX_PATH}/ldlinux.c32 "${PXE_PATH}/"
+	[ -f ${SYSLINUX_PATH}/libcom32.c32 ] && cp -f ${SYSLINUX_PATH}/libcom32.c32 "${PXE_PATH}/"
+	[ -f ${SYSLINUX_PATH}/libutil.c32 ] && cp -f ${SYSLINUX_PATH}/libutil.c32 "${PXE_PATH}/"
 
     rm -f ${PXE_CONFIG}.*
 
