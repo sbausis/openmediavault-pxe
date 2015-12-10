@@ -70,19 +70,22 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
     public function initialize()
     {
+		/* Settings */
+        $this->registerMethod("getSettings");
+        $this->registerMethod("setSettings");
+		/* Entries */
         $this->registerMethod("getEntries");
         $this->registerMethod("getEntry");
         $this->registerMethod("setEntry");
         $this->registerMethod("deleteEntry");
-        $this->registerMethod("getSettings");
-        $this->registerMethod("setSettings");
-
+		/* Images */
         $this->registerMethod("getImageList");
         $this->registerMethod("updatePackageCache");
         $this->registerMethod("setImageDownload");
         $this->registerMethod("getIPAddresses");
-
+		/* Syslinux */
         $this->registerMethod("updateSyslinux");
+        $this->registerMethod("getSyslinuxVersion");
     }
 
     public function getSettings($params, $context)
@@ -537,7 +540,18 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         }
 
 	}
-
+	public function getSyslinuxVersion($params, $context)
+	{
+		// Validate the RPC caller context.
+        $this->validateMethodContext(
+            $context,
+            array( "role" => OMV_ROLE_ADMINISTRATOR )
+        );
+		if (file_exists("/usr/share/syslinux/version")) {
+	        $VERSION = file_get_contents("/usr/share/syslinux/version");
+		}
+		return $VERSION;
+	}
 }
 
 // Register the RPC service.
