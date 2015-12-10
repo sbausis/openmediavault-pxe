@@ -104,8 +104,10 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         }
 
         // Modify result data
-        $object["enableWinPath"] = boolval($object["enableWinPath"]);
-
+		$object['enable'] 			= boolvalEx($object['enable']);
+        $object["enableWinPath"] 	= boolval($object["enableWinPath"]);
+		$object['use_new_syslinux'] = boolvalEx($object['use_new_syslinux']);
+		
         // Remove useless fields from the result object.
         unset($object["entries"]);
         unset($object["menus"]);
@@ -128,8 +130,10 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
             '{
                 "type"       : "object",
                 "properties" : {
+                    "enable": {"type":"boolean"},
                     "sharedfolderref": { '.$GLOBALS['OMV_JSONSCHEMA_UUID_NONE'].', "optional" : true },
-                    "enableWinPath": {"type":"boolean"}
+                    "enableWinPath": {"type":"boolean"},
+                    "use_new_syslinux": {"type":"boolean"}
                 }
             }'
         );
@@ -142,10 +146,12 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
         // Update the configuration object.
         $object = array(
-            "sharedfolderref" => $params["sharedfolderref"],
-            "enableWinPath"   => array_boolval($params,"enableWinPath"),
-            "entries"         => isset($oldObject["entries"]) ? $oldObject["entries"] : array(),
-            "menus"           => isset($oldObject["menus"]) ? $oldObject["menus"] : array()
+        	"enable"   			=> array_boolval($params,"enable"),
+            "sharedfolderref" 	=> $params["sharedfolderref"],
+            "enableWinPath"   	=> array_boolval($params,"enableWinPath"),
+            "use_new_syslinux" 	=> array_boolval($params,"use_new_syslinux"),
+            "entries"         	=> isset($oldObject["entries"]) ? $oldObject["entries"] : array(),
+            "menus"           	=> isset($oldObject["menus"]) ? $oldObject["menus"] : array()
         );
 
         // Set configuration object

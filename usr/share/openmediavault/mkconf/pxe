@@ -28,6 +28,11 @@ PXE_PATH=$(omv_get_sharedfolder_path "${PXE_SHARED_FOLDER_REF}")
 PXE_CONFIG_PATH="${PXE_PATH}/pxelinux.cfg"
 PXE_CONFIG="${PXE_CONFIG_PATH}/default"
 
+# Nothing more to do
+if [ "$(omv_config_get "${SERVICE_XPATH}/enable")" != "1" ]; then
+	exit 0
+fi
+
 command=`echo $2 | cut -d \  -f 1`
 package=`echo $2 | cut -d \  -f 2`
 
