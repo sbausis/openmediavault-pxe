@@ -106,22 +106,6 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 					xtype: "displayfield",
 					name: "syslinux_version",
 					fieldLabel: _("Current Version:"),
-					scope    : me,
-					handler  : function() {
-					    // Execute RPC.
-					    OMV.Rpc.request({
-					        scope       : this,
-					        callback    : function(id, success, response) {
-					            var field = me.findField("syslinux_version");
-					            field.store.reload();
-					        },
-					        relayErrors : false,
-					        rpcData     : {
-					            service  : "Pxe",
-					            method   : "getSyslinuxVersion"
-					        }
-					    });
-					}
 				},{
 					xtype    : "button",
 					name 	 : "update_syslinux",
@@ -150,6 +134,8 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 	                finish    : function(wnd, response) {
 	                    wnd.appendValue(_("Done..."));
 	                    wnd.setButtonDisabled("close", false);
+						var field = me.findField("syslinux_version");
+			            field.store.reload();
 	                },
 	                exception : function(wnd, error) {
 	                    OMV.MessageBox.error(null, error);
