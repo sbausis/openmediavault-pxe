@@ -29,9 +29,10 @@ PXE_CONFIG_PATH="${PXE_PATH}/pxelinux.cfg"
 PXE_CONFIG="${PXE_CONFIG_PATH}/default"
 
 # Nothing more to do
-if [ "$(omv_config_get "${SERVICE_XPATH}/enable")" != "1" ]; then
-	exit 0
-fi
+ENABLED=$(omv_config_get "${SERVICE_XPATH}/enable")
+#if [ "${ENABLED}" != "1" ]; then
+#	exit 0
+#fi
 
 command=`echo $2 | cut -d \  -f 1`
 package=`echo $2 | cut -d \  -f 2`
@@ -86,7 +87,7 @@ syslinux() {
 
 update()
 {
-	[ -z "${PXE_PATH}" ] && exit 0
+	[ "${ENABLED}" != "1" ] && exit 0
 
     mkdir -p "${PXE_CONFIG_PATH}"
     enablewinpath=$(omv_config_get "${SERVICE_XPATH}/enableWinPath")
@@ -176,7 +177,7 @@ EOF
 
 package()
 {
-	[ -z "${PXE_PATH}" ] && exit 0
+	[ "${ENABLED}" != "1" ] && exit 0
 
     export LANG=C
 
