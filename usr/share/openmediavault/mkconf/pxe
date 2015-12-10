@@ -69,7 +69,7 @@ syslinux() {
 			echo "$$" >/tmp/syslinux.install
 			
 			tar -xzf ${TMP}/syslinux-${VERSION}.tar.gz -C ${TMP}
-			(cd ${TMP}/syslinux-6.03 && make install && cp -f ${TMP}/syslinux-6.03/version /usr/share/syslinux/version) 2>/dev/null
+			(cd ${TMP}/syslinux-${VERSION} && make install && cp -f ${TMP}/syslinux-${VERSION}/version /usr/share/syslinux/version) 2>/dev/null
 			
 			rm -f /tmp/syslinux.install
 		fi
