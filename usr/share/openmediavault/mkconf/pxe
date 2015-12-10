@@ -137,7 +137,7 @@ EOF
 
         if [ "${enable}" != "0" ]; then
             if [ "${group}" != "Default" ]; then
-                cat <<EOF >> "$PXE_CONFIG"
+				cat <<EOF >> "$PXE_CONFIG"
 
 LABEL ${group}
  KERNEL vesamenu.c32
@@ -159,7 +159,6 @@ LABEL ${label}
  KERNEL ${kernel}
  APPEND ${append}
 EOF
-                
             else
                 cat <<EOF >> "${PXE_CONFIG}"
 

@@ -42,7 +42,7 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 				name: [
 					"sharedfolderref",
 					"enableWinPath",
-					"syslinux_fieldset"
+					"use_new_syslinux"
 				],
 				conditions: [
 					{ name: "enable", value: false }
@@ -57,34 +57,6 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 				properties: "!allowBlank"
 			}]
         }],
-
-	    /*getButtonItems : function() {
-	        var me = this;
-	        var items = me.callParent(arguments);
-	        items.push({
-	            xtype    : "button",
-	            text     : _("Update Syslinux"),
-	            icon     : "images/reboot.png",
-	            iconCls  : Ext.baseCSSPrefix + "btn-icon-16x16",
-	            scope    : me,
-	            handler  : function() {
-	                // Execute RPC.
-	                OMV.Rpc.request({
-	                    scope       : this,
-	                    callback    : function(id, success, response) {
-	                        var field = me.findField("images");
-	                        field.store.reload();
-	                    },
-	                    relayErrors : false,
-	                    rpcData     : {
-	                        service  : "Pxe",
-	                        method   : "updateSyslinux"
-	                    }
-	                });
-	            }
-	        });
-	        return items;
-	    },*/
 
         getFormItems: function() {
 			var me = this;
@@ -126,6 +98,11 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 					labelSeparator: ""
 				},
 				items:  [{
+					xtype: "checkbox",
+					name: "use_new_syslinux",
+					fieldLabel: _("Use newest Syslinux"),
+					checked: true
+				},{
 					xtype: "displayfield",
 					name: "syslinux_version",
 					fieldLabel: _("Current Version:"),
@@ -134,10 +111,10 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 					    // Execute RPC.
 					    OMV.Rpc.request({
 					        scope       : this,
-					        //callback    : function(id, success, response) {
-					        //    var field = me.findField("syslinux_version");
-					        //    field.store.reload();
-					        //},
+					        callback    : function(id, success, response) {
+					            var field = me.findField("syslinux_version");
+					            field.store.reload();
+					        },
 					        relayErrors : false,
 					        rpcData     : {
 					            service  : "Pxe",
@@ -146,35 +123,44 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 					    });
 					}
 				},{
-					xtype: "checkbox",
-					name: "use_new_syslinux",
-					fieldLabel: _("Use newest Syslinux"),
-					checked: true
-				},{
 					xtype    : "button",
 					name 	 : "update_syslinux",
 					text     : _("Update Syslinux"),
 					icon     : "images/reboot.png",
 					iconCls  : Ext.baseCSSPrefix + "btn-icon-16x16",
-					scope    : me,
-					handler  : function() {
-					    // Execute RPC.
-					    OMV.Rpc.request({
-					        scope       : this,
-					        callback    : function(id, success, response) {
-					            var field = me.findField("images");
-					            field.store.reload();
-					        },
-					        relayErrors : false,
-					        rpcData     : {
-					            service  : "Pxe",
-					            method   : "updateSyslinux"
-					        }
-					    });
-					}
+	                scope   : this,
+	                handler : Ext.Function.bind(me.onInstallButton, me, [ me ]),
+	                margin  : "0 0 7 0"
 				}]
 			}];
-		}
+		},
+		
+	    onInstallButton : function() {
+	        var me = this;
+	        var wnd = Ext.create("OMV.window.Execute", {
+	            title           : _("Update Syslinux"),
+	            rpcService      : "Pxe",
+	            rpcMethod       : "updateSyslinux",
+	            rpcParams       : {},
+	            rpcIgnoreErrors : true,
+	            hideStartButton : true,
+	            hideStopButton  : true,
+	            listeners       : {
+	                scope     : me,
+	                finish    : function(wnd, response) {
+	                    wnd.appendValue(_("Done..."));
+	                    wnd.setButtonDisabled("close", false);
+	                },
+	                exception : function(wnd, error) {
+	                    OMV.MessageBox.error(null, error);
+	                    wnd.setButtonDisabled("close", false);
+	                }
+	            }
+	        });
+	        wnd.setButtonDisabled("close", true);
+	        wnd.show();
+	        wnd.start();
+	    }
 });
 
 OMV.WorkspaceManager.registerPanel({
