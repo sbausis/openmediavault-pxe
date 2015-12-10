@@ -107,7 +107,7 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 		$object['enable'] 			= boolvalEx($object['enable']);
         $object["enableWinPath"] 	= boolval($object["enableWinPath"]);
 		$object['use_new_syslinux'] = boolvalEx($object['use_new_syslinux']);
-		$object['syslinux_version'] = $this->getSyslinuxVersion();
+		$object['syslinux_version'] = $this->getSyslinuxVersion($params, $context);
 		
         // Remove useless fields from the result object.
         unset($object["entries"]);
@@ -152,7 +152,7 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
             "sharedfolderref" 	=> $params["sharedfolderref"],
             "enableWinPath"   	=> array_boolval($params,"enableWinPath"),
             "use_new_syslinux" 	=> array_boolval($params,"use_new_syslinux"),
-            "syslinux_version" 	=> $this->getSyslinuxVersion(),
+            "syslinux_version" 	=> $this->getSyslinuxVersion($params, $context),
             "entries"         	=> isset($oldObject["entries"]) ? $oldObject["entries"] : array(),
             "menus"           	=> isset($oldObject["menus"]) ? $oldObject["menus"] : array()
         );
