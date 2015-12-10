@@ -108,7 +108,7 @@ EOF
 	[ -f ${SYSLINUX_PATH}/libcom32.c32 ] && cp -f ${SYSLINUX_PATH}/libcom32.c32 "${PXE_PATH}/"
 	[ -f ${SYSLINUX_PATH}/libutil.c32 ] && cp -f ${SYSLINUX_PATH}/libutil.c32 "${PXE_PATH}/"
 
-    rm -f ${PXE_CONFIG}.*
+    rm -Rf ${PXE_CONFIG}.*
 
     timeout="$(omv_config_get "${SERVICE_XPATH}/timeout")"
 
