@@ -17,6 +17,10 @@ case "$1" in
 		if [ -f /var/cache/openmediavault/pxe_packages_cache ]; then
 	        rm -f /var/cache/openmediavault/pxe_packages_cache
 	    fi
+		
+		if [ -d /usr/share/syslinux ]; then
+	        rm -Rf /usr/share/syslinux
+	    fi
     ;;
 
     remove)
