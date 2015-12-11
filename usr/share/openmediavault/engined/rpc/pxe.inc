@@ -556,14 +556,11 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
             $context,
             array( "role" => OMV_ROLE_ADMINISTRATOR )
         );
-		if (file_exists("/usr/share/syslinux/version")) {
-	        $VERSION = file_get_contents("/usr/share/syslinux/version");
-		else {
-			$cmd = "export LANG=C;V=$(dpkg -l | grep '^ii' | grep syslinux-common | awk '{print $3}');V=${V%%+*};echo ${V##*:}"
-			if(0 !== $this->exec($cmd, $VERSION)) {
-				throw new OMVException(OMVErrorMsg::E_EXEC_FAILED,
-				  $cmd, implode("\n", $VERSION));
-			}
+		
+		$cmd = "export LANG=C; omv-mkconf pxe syslinux_version 2>&1";
+		if(0 !== $this->exec($cmd, $VERSION)) {
+			throw new OMVException(OMVErrorMsg::E_EXEC_FAILED,
+			  $cmd, implode("\n", $VERSION));
 		}
 		return $VERSION;
 	}

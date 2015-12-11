@@ -27,6 +27,7 @@ PXE_SHARED_FOLDER_REF=$(omv_config_get "${SERVICE_XPATH}/sharedfolderref")
 PXE_PATH=$(omv_get_sharedfolder_path "${PXE_SHARED_FOLDER_REF}")
 PXE_CONFIG_PATH="${PXE_PATH}/pxelinux.cfg"
 PXE_CONFIG="${PXE_CONFIG_PATH}/default"
+PXE_USE_NEW_SYSLINUX=$(omv_config_get "${SERVICE_XPATH}/use_new_syslinux")
 
 command=`echo $2 | cut -d \  -f 1`
 package=`echo $2 | cut -d \  -f 2`
@@ -39,7 +40,7 @@ fi
 
 # Syslinux
 syslinux_version() {
-	if [ -f "/usr/share/syslinux/version" ]; then
+	if [ "${PXE_USE_NEW_SYSLINUX}" == "1" ] && [ -f "/usr/share/syslinux/version" ]; then
 		cat /usr/share/syslinux/version | awk -F" " '{print $1}' 2>/dev/null
 	else
 		local V=$(dpkg -l | grep '^ii' | grep syslinux-common | awk '{print $3}')
@@ -54,7 +55,7 @@ syslinux_version_mayor() {
 }
 
 syslinux_path() {
-	if [ -z "$(syslinux_version)" ]; then
+	if [ "${PXE_USE_NEW_SYSLINUX}" != "1" ] || [ -z "$(syslinux_version)" ]; then
 		echo "/usr/lib/syslinux"
 	else
 		echo "/usr/share/syslinux"
@@ -164,7 +165,6 @@ update() {
 
     mkdir -p "${PXE_CONFIG_PATH}"
     local enablewinpath=$(omv_config_get "${SERVICE_XPATH}/enableWinPath")
-
 
     if [ "${enablewinpath}" = "1" ]; then
         cat <<EOF > /etc/tftp_remap.conf
