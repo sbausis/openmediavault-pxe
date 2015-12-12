@@ -70,19 +70,22 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
     public function initialize()
     {
+		/* Settings */
+        $this->registerMethod("getSettings");
+        $this->registerMethod("setSettings");
+		/* Entries */
         $this->registerMethod("getEntries");
         $this->registerMethod("getEntry");
         $this->registerMethod("setEntry");
         $this->registerMethod("deleteEntry");
-        $this->registerMethod("getSettings");
-        $this->registerMethod("setSettings");
-
+		/* Images */
         $this->registerMethod("getImageList");
         $this->registerMethod("updatePackageCache");
         $this->registerMethod("setImageDownload");
         $this->registerMethod("getIPAddresses");
-
+		/* Syslinux */
         $this->registerMethod("updateSyslinux");
+        $this->registerMethod("getSyslinuxVersion");
     }
 
     public function getSettings($params, $context)
@@ -101,8 +104,11 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         }
 
         // Modify result data
-        $object["enableWinPath"] = boolval($object["enableWinPath"]);
-
+		$object['enable'] 			= boolvalEx($object['enable']);
+        $object["enableWinPath"] 	= boolval($object["enableWinPath"]);
+		$object['use_new_syslinux'] = boolvalEx($object['use_new_syslinux']);
+		$object['syslinux_version'] = $this->getSyslinuxVersion($params, $context);
+		
         // Remove useless fields from the result object.
         unset($object["entries"]);
         unset($object["menus"]);
@@ -125,8 +131,11 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
             '{
                 "type"       : "object",
                 "properties" : {
+                    "enable": {"type":"boolean"},
                     "sharedfolderref": { '.$GLOBALS['OMV_JSONSCHEMA_UUID_NONE'].', "optional" : true },
-                    "enableWinPath": {"type":"boolean"}
+                    "enableWinPath": {"type":"boolean"},
+                    "use_new_syslinux": {"type":"boolean"},
+                    "syslinux_version": {"type":"string"}
                 }
             }'
         );
@@ -139,10 +148,13 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
         // Update the configuration object.
         $object = array(
-            "sharedfolderref" => $params["sharedfolderref"],
-            "enableWinPath"   => array_boolval($params,"enableWinPath"),
-            "entries"         => isset($oldObject["entries"]) ? $oldObject["entries"] : array(),
-            "menus"           => isset($oldObject["menus"]) ? $oldObject["menus"] : array()
+        	"enable"   			=> array_boolval($params,"enable"),
+            "sharedfolderref" 	=> $params["sharedfolderref"],
+            "enableWinPath"   	=> array_boolval($params,"enableWinPath"),
+            "use_new_syslinux" 	=> array_boolval($params,"use_new_syslinux"),
+            "syslinux_version" 	=> $this->getSyslinuxVersion($params, $context),
+            "entries"         	=> isset($oldObject["entries"]) ? $oldObject["entries"] : array(),
+            "menus"           	=> isset($oldObject["menus"]) ? $oldObject["menus"] : array()
         );
 
         // Set configuration object
@@ -537,7 +549,21 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         }
 
 	}
-
+	public function getSyslinuxVersion($params, $context)
+	{
+		// Validate the RPC caller context.
+        $this->validateMethodContext(
+            $context,
+            array( "role" => OMV_ROLE_ADMINISTRATOR )
+        );
+		
+		$cmd = "export LANG=C; omv-mkconf pxe syslinux_version 2>&1";
+		if(0 !== $this->exec($cmd, $VERSION)) {
+			throw new OMVException(OMVErrorMsg::E_EXEC_FAILED,
+			  $cmd, implode("\n", $VERSION));
+		}
+		return $VERSION;
+	}
 }
 
 // Register the RPC service.

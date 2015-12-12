@@ -1,3 +1,9 @@
+openmediavault-pxe (1.7.1) stable; urgency=low
+
+  * general update for testing
+
+ -- Simon Pascal Baur <sbausis@gmx.net>  Fri, 11 Dec 2015 01:46:17 +0100
+
 openmediavault-pxe (1.7) stable; urgency=low
 
   * Fix IP address list for non-english languages

@@ -27,16 +27,35 @@ PXE_SHARED_FOLDER_REF=$(omv_config_get "${SERVICE_XPATH}/sharedfolderref")
 PXE_PATH=$(omv_get_sharedfolder_path "${PXE_SHARED_FOLDER_REF}")
 PXE_CONFIG_PATH="${PXE_PATH}/pxelinux.cfg"
 PXE_CONFIG="${PXE_CONFIG_PATH}/default"
+PXE_USE_NEW_SYSLINUX=$(omv_config_get "${SERVICE_XPATH}/use_new_syslinux")
 
 command=`echo $2 | cut -d \  -f 1`
 package=`echo $2 | cut -d \  -f 2`
 
+# Nothing more to do
+ENABLED=$(omv_config_get "${SERVICE_XPATH}/enable")
+if [ "${ENABLED}" != "1" ] && [ "${command}" != "syslinux" ] && [ "${command}" != "syslinux_version" ]; then
+	exit 0
+fi
+
+# Syslinux
 syslinux_version() {
-	[ -f "/usr/share/syslinux/version" ] && cat /usr/share/syslinux/version | awk -F" " '{print $1}' 2>/dev/null
+	if [ "${PXE_USE_NEW_SYSLINUX}" != "0" ] && [ -f "/usr/share/syslinux/version" ]; then
+		cat /usr/share/syslinux/version | awk -F" " '{print $1}' 2>/dev/null
+	else
+		local V=$(dpkg -l | grep '^ii' | grep syslinux-common | awk '{print $3}')
+		V=${V%%+*}
+		echo ${V##*:}
+	fi
+}
+
+syslinux_version_mayor() {
+	local VERSION=$(syslinux_version)
+	echo ${VERSION%%.*}
 }
 
 syslinux_path() {
-	if [ -z "$(syslinux_version)" ]; then
+	if [ "${PXE_USE_NEW_SYSLINUX}" != "1" ] || [ -z "$(syslinux_version)" ]; then
 		echo "/usr/lib/syslinux"
 	else
 		echo "/usr/share/syslinux"
@@ -46,28 +65,23 @@ syslinux_path() {
 syslinux() {
 	[ -f /tmp/syslinux.install ] && [ -d /proc/`cat /tmp/syslinux.install` ] && ( 
 		(sleep 20 && rm -f /tmp/syslinux.install) &
-		PID=$!; while sleep 2; do [ ! -f /tmp/syslinux.install ] && (kill -p ${PID}; break); done)
+		local PID=$!; while sleep 2; do [ ! -f /tmp/syslinux.install ] && (kill -p ${PID}; break); done)
 		
 	local VERSION=$(wget -O - http://UniverseNAS.0rca.ch/sources/pxe-syslinux | head -n 1)
 	if [ -n "${VERSION}" ]; then
-		# should be installed already
-		#apt-get -qqy install syslinux-common
-		#else
+		
 		if [ ! -f "/usr/share/syslinux/version" ] || [ "$(cat /usr/share/syslinux/version | awk -F' ' '{print $1}')" != "${VERSION}" ]; then
-			
-			# should be installed already
-			#apt-get -qqy install uuid-dev nasm
 			
 			local TMP=$(mktemp -d -t syslinux.XXXXXXXXXX)
 			wget -O ${TMP}/syslinux-${VERSION}.tar.gz http://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-${VERSION}.tar.gz
 
-			SHASUM=$(wget -q -O - http://www.kernel.org/pub/linux/utils/boot/syslinux/sha256sums.asc | grep "syslinux-${VERSION}.tar.gz" | head -n 1 | awk -F " " '{print $1}')
+			local SHASUM=$(wget -q -O - http://www.kernel.org/pub/linux/utils/boot/syslinux/sha256sums.asc | grep "syslinux-${VERSION}.tar.gz" | head -n 1 | awk -F " " '{print $1}')
 			[ "$(sha256sum ${TMP}/syslinux-${VERSION}.tar.gz | awk -F " " '{print $1}')" != "${SHASUM}" ] && exit 1
 
 			echo "$$" >/tmp/syslinux.install
 			
 			tar -xzf ${TMP}/syslinux-${VERSION}.tar.gz -C ${TMP}
-			(cd ${TMP}/syslinux-6.03 && make install && cp -f ${TMP}/syslinux-6.03/version /usr/share/syslinux/version) 2>/dev/null
+			(cd ${TMP}/syslinux-${VERSION} && make install && cp -f ${TMP}/syslinux-${VERSION}/version /usr/share/syslinux/version) 2>/dev/null
 			
 			rm -f /tmp/syslinux.install
 		fi
@@ -77,33 +91,11 @@ syslinux() {
 	echo "SYSLINUX VERSION $(syslinux_version)"
 }
 
-update()
-{
-	[ -z "${PXE_PATH}" ] && exit 0
+update_config() {
+	
+    rm -Rf ${PXE_CONFIG}.*
 
-    mkdir -p "${PXE_CONFIG_PATH}"
-    enablewinpath=$(omv_config_get "${SERVICE_XPATH}/enableWinPath")
-
-    if [ "${enablewinpath}" = "1" ]; then
-        cat <<EOF > /etc/tftp_remap.conf
-rg \\ /
-EOF
-    elif [ -e "/etc/tftp_remap.conf" ]; then
-        rm /etc/tftp_remap.conf
-    fi
-    invoke-rc.d tftpd-hpa restart
-
-	#syslinux
-    cp -f `syslinux_path`/vesamenu.c32 "${PXE_PATH}"
-    cp -f `syslinux_path`/pxelinux.0 "${PXE_PATH}"
-
-	[ -f `syslinux_path`/ldlinux.c32 ] && cp -f `syslinux_path`/ldlinux.c32 "${PXE_PATH}"
-	[ -f `syslinux_path`/libcom32.c32 ] && cp -f `syslinux_path`/libcom32.c32 "${PXE_PATH}"
-	[ -f `syslinux_path`/libutil.c32 ] && cp -f `syslinux_path`/libutil.c32 "${PXE_PATH}"
-
-    rm -f ${PXE_CONFIG}.*
-
-    timeout="$(omv_config_get "${SERVICE_XPATH}/timeout")"
+    local timeout="$(omv_config_get "${SERVICE_XPATH}/timeout")"
 
     cat <<EOF > "${PXE_CONFIG}"
 DEFAULT vesamenu.c32
@@ -118,19 +110,19 @@ LOCALBOOT 0
 EOF
 
     #Loop through entries and output them into the config file
-    count=$(omv_config_get_count "${SERVICE_XPATH_ENTRY}");
-    index=1;
+    local count=$(omv_config_get_count "${SERVICE_XPATH_ENTRY}")
+    local index=1;
     while [ ${index} -le ${count} ]; do    
-        enable="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/enable")"
-        group="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/group")"
-        label="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/label")"
-        menu="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/menu")"
-        kernel="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/kernel")"
-        append="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/append")"
+        local enable="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/enable")"
+        local group="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/group")"
+        local label="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/label")"
+        local menu="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/menu")"
+        local kernel="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/kernel")"
+        local append="$(omv_config_get "${SERVICE_XPATH_ENTRY}[position()=${index}]/append")"
 
         if [ "${enable}" != "0" ]; then
             if [ "${group}" != "Default" ]; then
-                cat <<EOF >> "$PXE_CONFIG"
+				cat <<EOF >> "$PXE_CONFIG"
 
 LABEL ${group}
  KERNEL vesamenu.c32
@@ -152,7 +144,6 @@ LABEL ${label}
  KERNEL ${kernel}
  APPEND ${append}
 EOF
-                
             else
                 cat <<EOF >> "${PXE_CONFIG}"
 
@@ -165,23 +156,56 @@ EOF
         fi
 
         index=$(( ${index} + 1 ))
-    done;
+    done
 }
 
-package()
-{
-	[ -z "${PXE_PATH}" ] && exit 0
+update() {
+	
+	local SYSLINUX_PATH=$(syslinux_path)
+
+    mkdir -p "${PXE_CONFIG_PATH}"
+    local enablewinpath=$(omv_config_get "${SERVICE_XPATH}/enableWinPath")
+
+    if [ "${enablewinpath}" = "1" ]; then
+        cat <<EOF > /etc/tftp_remap.conf
+rg \\ /
+EOF
+    elif [ -e "/etc/tftp_remap.conf" ]; then
+        rm /etc/tftp_remap.conf
+    fi
+    invoke-rc.d tftpd-hpa restart
+
+	# copy syslinux to pxe Folder
+	if [ "$(syslinux_version_mayor)" -ge "5" ]; then
+	    cp -f 	${SYSLINUX_PATH}/vesamenu.c32 \
+				${SYSLINUX_PATH}/pxelinux.0 \
+				${SYSLINUX_PATH}/ldlinux.c32 \
+				${SYSLINUX_PATH}/libcom32.c32 \
+				${SYSLINUX_PATH}/libutil.c32 \
+				"${PXE_PATH}/"
+	else
+		cp -f 	${SYSLINUX_PATH}/vesamenu.c32 \
+				${SYSLINUX_PATH}/pxelinux.0 \
+				"${PXE_PATH}/"
+	fi
+	
+	# update Config File
+	update_config
+	
+}
+
+package() {
 
     export LANG=C
 
-    templocation="/tmp/pxeinstall"
+    local templocation="/tmp/pxeinstall"
 
     # make temp directory
     rm -Rf ${templocation}
 	mkdir -p "${templocation}/pxe"
 
-	package_url="${package}"
-	package=$(basename "${package}")
+	local package_url="${package}"
+	local package=$(basename "${package}")
 
     # download package
     wget ${package_url} -O "${templocation}/${package}"
@@ -206,6 +230,7 @@ package()
 
     # remove downloaded package file
     rm -Rf "${templocation}"
+
 }
 
 case ${command} in
@@ -217,6 +242,10 @@ case ${command} in
 	syslinux)
 	    echo "Installing syslinux ..."
 	    syslinux
+	;;
+
+	syslinux_version)
+	    syslinux_version
 	;;
 
     *)

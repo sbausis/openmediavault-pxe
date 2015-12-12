@@ -32,8 +32,20 @@ case "$1" in
 			omv_config_add_element "${SERVICE_XPATH}" "enableWinPath" "0"
         fi
 
+        if ! omv_config_exists "${SERVICE_XPATH}/enable"; then
+			omv_config_add_element "${SERVICE_XPATH}" "enable" "0"
+        fi
+
+        if ! omv_config_exists "${SERVICE_XPATH}/use_new_syslinux"; then
+			omv_config_add_element "${SERVICE_XPATH}" "use_new_syslinux" "0"
+        fi
+
+        if ! omv_config_exists "${SERVICE_XPATH}/syslinux_version"; then
+			omv_config_add_element "${SERVICE_XPATH}" "syslinux_version"
+        fi
+
         # install syslinux
-        omv-mkconf pxe syslinux 2>/dev/null
+        #omv-mkconf pxe syslinux 2>/dev/null
 
         # update Config
         omv-mkconf pxe 2>/dev/null
