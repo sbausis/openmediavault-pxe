@@ -103,9 +103,11 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 					fieldLabel: _("Use newest Syslinux"),
 					checked: true
 				},{
-					xtype: "displayfield",
+					xtype: "textfield",
 					name: "syslinux_version",
 					fieldLabel: _("Current Version:"),
+		            allowBlank : true,
+	                editable      : false
 				},{
 					xtype    : "button",
 					name 	 : "update_syslinux",
