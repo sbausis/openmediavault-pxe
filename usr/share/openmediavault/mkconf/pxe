@@ -40,7 +40,8 @@ fi
 
 # Syslinux
 syslinux_version() {
-	if [ "${PXE_USE_NEW_SYSLINUX}" != "0" ] && [ -f "/usr/share/syslinux/version" ]; then
+	#if [ "${PXE_USE_NEW_SYSLINUX}" != "1" ] && 
+	if [ -f "/usr/share/syslinux/version" ]; then
 		cat /usr/share/syslinux/version | awk -F" " '{print $1}' 2>/dev/null
 	else
 		local V=$(dpkg -l | grep '^ii' | grep syslinux-common | awk '{print $3}')
