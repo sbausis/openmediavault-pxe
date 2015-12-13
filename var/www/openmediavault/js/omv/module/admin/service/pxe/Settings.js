@@ -36,7 +36,7 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 		rpcGetMethod: "getSettings", // name for the function in the rpc that gets the settings
 		rpcSetMethod: "setSettings", // name for the function in the rpc that saves the settings
 
-        plugins: [{
+        /*plugins: [{
 			ptype: "linkedfields",
 			correlations: [{
 				name: [
@@ -56,7 +56,7 @@ Ext.define("OMV.module.admin.service.pxe.Settings", {
 				],
 				properties: "!allowBlank"
 			}]
-        }],
+        }],*/
 
         getFormItems: function() {
 			var me = this;
