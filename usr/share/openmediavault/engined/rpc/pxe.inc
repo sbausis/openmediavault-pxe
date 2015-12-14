@@ -446,7 +446,7 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         }
 
         // add info from config.txt to entries
-        $configTxt = "/tmp/pxeinstall/config.txt";
+        $configTxt = "/tmp/config.pxe";
 		if (file_exists($configTxt)) {
 			
 			$file = explode("\n", file_get_contents($configTxt));
@@ -479,6 +479,12 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 	        $cmd = "omv-mkconf pxe update 2>&1";
 	        OMVUtil::exec($cmd, $output, $result);
 			
+		}
+		else {
+			throw new OMVException(
+                OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED,
+                $configTxt
+            );
 		}
         
     }

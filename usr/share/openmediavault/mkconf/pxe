@@ -225,7 +225,7 @@ package() {
 	fi
 
     # put config.txt in temp directory
-    mv -f "${templocation}/pxe/config.txt" "${templocation}"
+    mv -f "${templocation}/pxe/config.txt" "/tmp/config.pxe"
 
 	cp -Rf ${templocation}/pxe/* ${PXE_PATH}/
 
