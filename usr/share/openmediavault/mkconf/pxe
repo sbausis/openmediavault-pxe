@@ -73,18 +73,18 @@ syslinux() {
 		
 		if [ ! -f "/usr/share/syslinux/version" ] || [ "$(cat /usr/share/syslinux/version | awk -F' ' '{print $1}')" != "${VERSION}" ]; then
 			
+			echo "$$" >/tmp/syslinux.install
+			
 			local TMP=$(mktemp -d -t syslinux.XXXXXXXXXX)
 			wget -O ${TMP}/syslinux-${VERSION}.tar.gz http://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-${VERSION}.tar.gz
 
 			local SHASUM=$(wget -q -O - http://www.kernel.org/pub/linux/utils/boot/syslinux/sha256sums.asc | grep "syslinux-${VERSION}.tar.gz" | head -n 1 | awk -F " " '{print $1}')
 			[ "$(sha256sum ${TMP}/syslinux-${VERSION}.tar.gz | awk -F " " '{print $1}')" != "${SHASUM}" ] && exit 1
 
-			echo "$$" >/tmp/syslinux.install
-			
 			tar -xzf ${TMP}/syslinux-${VERSION}.tar.gz -C ${TMP}
 			(cd ${TMP}/syslinux-${VERSION} && make install && cp -f ${TMP}/syslinux-${VERSION}/version /usr/share/syslinux/version) 2>/dev/null
 			
-			rm -f /tmp/syslinux.install
+			rm -f ${TMP} /tmp/syslinux.install
 		fi
 		
 	fi
