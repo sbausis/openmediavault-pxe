@@ -73,6 +73,8 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 		/* Settings */
         $this->registerMethod("getSettings");
         $this->registerMethod("setSettings");
+        $this->registerMethod("get");
+        $this->registerMethod("set");
 		/* Entries */
         $this->registerMethod("getEntries");
         $this->registerMethod("getEntry");
@@ -86,6 +88,85 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 		/* Syslinux */
         $this->registerMethod("updateSyslinux");
         $this->registerMethod("getSyslinuxVersion");
+    }
+
+    public function get($params, $context)
+    {
+        global $xmlConfig;
+
+        // Validate the RPC caller context.
+        $this->validateMethodContext($context, array(
+            "role" => OMV_ROLE_ADMINISTRATOR
+        ));
+
+        // Get configuration object
+        $object = $xmlConfig->get($this->getXPath());
+        if (is_null($object)) {
+            throw new OMVException(OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED, $this->getXPath());
+        }
+
+        // Modify result data
+		$object['enable'] 			= boolvalEx($object['enable']);
+        $object["enableWinPath"] 	= boolval($object["enableWinPath"]);
+		$object['use_new_syslinux'] = boolvalEx($object['use_new_syslinux']);
+		$object['syslinux_version'] = $this->getSyslinuxVersion($params, $context);
+		
+        // Remove useless fields from the result object.
+        unset($object["entries"]);
+        unset($object["menus"]);
+
+        return $object;
+    }
+
+    public function set($params, $context)
+    {
+        global $xmlConfig;
+
+        // Validate the RPC caller context.
+        $this->validateMethodContext($context, array(
+            "role" => OMV_ROLE_ADMINISTRATOR
+        ));
+
+        // Validate the parameters of the RPC service method.
+        $this->validateMethodParams(
+            $params,
+            '{
+                "type"       : "object",
+                "properties" : {
+                    "enable": {"type":"boolean"},
+                    "sharedfolderref": { '.$GLOBALS['OMV_JSONSCHEMA_UUID_NONE'].', "optional" : true },
+                    "enableWinPath": {"type":"boolean"},
+                    "use_new_syslinux": {"type":"boolean"},
+                    "syslinux_version": {"type":"string"}
+                }
+            }'
+        );
+
+        // Get the existing configuration object.
+        $oldObject = $xmlConfig->get( $this->getXPath() );
+        if(is_null($oldObject)) {
+            throw new OMVException(OMVErrorMsg::E_CONFIG_GET_OBJECT_FAILED, $this->getXPath() );
+        }
+
+        // Update the configuration object.
+        $object = array(
+        	"enable"   			=> array_boolval($params,"enable"),
+            "sharedfolderref" 	=> $params["sharedfolderref"],
+            "enableWinPath"   	=> array_boolval($params,"enableWinPath"),
+            "use_new_syslinux" 	=> array_boolval($params,"use_new_syslinux"),
+            "syslinux_version" 	=> $this->getSyslinuxVersion($params, $context),
+            "entries"         	=> isset($oldObject["entries"]) ? $oldObject["entries"] : array(),
+            "menus"           	=> isset($oldObject["menus"]) ? $oldObject["menus"] : array()
+        );
+
+        // Set configuration object
+        if (false === $xmlConfig->replace($this->getXPath(), $object)) {
+            throw new OMVException(OMVErrorMsg::E_CONFIG_SET_OBJECT_FAILED, $this->getXPath());
+        }
+
+        // Notify configuration changes
+        $dispatcher = &OMVNotifyDispatcher::getInstance();
+        $dispatcher->notify(OMV_NOTIFY_MODIFY, "org.openmediavault.services.pxe", $object);
     }
 
     public function getSettings($params, $context)

@@ -158,32 +158,159 @@ OMV.WorkspaceManager.registerPanel({
         position: 10,
         className: "OMV.module.admin.service.pxe.Settings"
 });
-/*
-Ext.define("OMV.module.admin.service.pxe.MenuConfig", {
+
+/* ********************************** */
+
+Ext.define("OMV.module.admin.service.pxe.Setting", {
         extend: "OMV.workspace.form.Panel",
+        requires: [
+                "OMV.form.field.SharedFolderComboBox"
+        ],
 
         rpcService: "PXE",
-		rpcGetMethod: "getMenuConfig", // name for the function in the rpc that gets the settings
-		rpcSetMethod: "setMenuConfig", // name for the function in the rpc that saves the settings
+		rpcGetMethod: "get", // name for the function in the rpc that gets the settings
+		rpcSetMethod: "set", // name for the function in the rpc that saves the settings
+
+        /*plugins: [{
+			ptype: "linkedfields",
+			correlations: [{
+				name: [
+					"sharedfolderref",
+					"enableWinPath",
+					"use_new_syslinux"
+				],
+				conditions: [
+					{ name: "enable", value: false }
+				],
+				properties: "disabled"
+			},{
+			
+				name: "sharedfolderref",
+				conditions: [
+					{ name: "enable", value: true }
+				],
+				properties: "!allowBlank"
+			}]
+        }],*/
 
         getFormItems: function() {
 			var me = this;
 			return [{
 				xtype:    "fieldset",
-				title:    _("Menu Config"),
+				title:    _("Settings"),
 				fieldDefaults:  {
 					labelSeparator: ""
 				},
-				items:  []
+				items:  [
+					{
+						xtype: "textfield",
+						name: "syslinux_version",
+						fieldLabel: _("Current Version:"),
+			            allowBlank : true,
+		                editable      : false
+					}, {
+						xtype: "textfield",
+						name: "syslinux_version",
+						fieldLabel: _("Current Version:"),
+			            allowBlank : true,
+		                editable      : false
+					}
+				]
+			},{
+				xtype:    "fieldset",
+				title:    _("Settings"),
+				fieldDefaults:  {
+					labelSeparator: ""
+				},
+				items:  [{
+					xtype: "checkbox",
+					name: "enable",
+					fieldLabel: _("Enable"),
+					checked: false
+				},{
+					xtype: "sharedfoldercombo",
+					name: "sharedfolderref",
+					fieldLabel: _("Shared folder"),
+					allowNone: true,
+					plugins: [{
+						ptype: "fieldinfo",
+						text: _("The location of your PXE files.")
+						}]
+				},{
+					xtype:	"checkbox",
+					name:	"enableWinPath",
+					fieldLabel:	_("Enable Windows Path Support"),
+					checked: false,
+                    plugins: [{
+						ptype: "fieldinfo",
+						text: _("If enabled, add -m /etc/tftp_remap.conf to the Extra options box in the tftp server tab.")
+                    }]
+				}]
+			},{
+				xtype:    "fieldset",
+				name: 	"syslinux_fieldset",
+				title:    _("Syslinux"),
+				fieldDefaults:  {
+					labelSeparator: ""
+				},
+				items:  [{
+					xtype: "checkbox",
+					name: "use_new_syslinux",
+					fieldLabel: _("Use newest Syslinux"),
+					checked: true
+				},{
+					xtype: "textfield",
+					name: "syslinux_version",
+					fieldLabel: _("Current Version:"),
+		            allowBlank : true,
+	                editable      : false
+				},{
+					xtype    : "button",
+					name 	 : "update_syslinux",
+					text     : _("Update Syslinux"),
+					icon     : "images/reboot.png",
+					iconCls  : Ext.baseCSSPrefix + "btn-icon-16x16",
+	                scope   : this,
+	                handler : Ext.Function.bind(me.onInstallButton, me, [ me ]),
+	                margin  : "0 0 7 0"
+				}]
 			}];
-		}
+		},
+		
+	    /*onInstallButton : function() {
+	        var me = this;
+	        var wnd = Ext.create("OMV.window.Execute", {
+	            title           : _("Update Syslinux"),
+	            rpcService      : "Pxe",
+	            rpcMethod       : "updateSyslinux",
+	            rpcParams       : {},
+	            rpcIgnoreErrors : true,
+	            hideStartButton : true,
+	            hideStopButton  : true,
+	            listeners       : {
+	                scope     : me,
+	                finish    : function(wnd, response) {
+	                    wnd.appendValue(_("Done..."));
+	                    wnd.setButtonDisabled("close", false);
+						var field = me.findField("syslinux_version");
+			            field.store.reload();
+	                },
+	                exception : function(wnd, error) {
+	                    OMV.MessageBox.error(null, error);
+	                    wnd.setButtonDisabled("close", false);
+	                }
+	            }
+	        });
+	        wnd.setButtonDisabled("close", true);
+	        wnd.show();
+	        wnd.start();
+	    }*/
 });
 
 OMV.WorkspaceManager.registerPanel({
-        id: "Settings",
-        path: "/service/menuconfig",
-        text: _("Settings"),
+        id: "Setting",
+        path: "/service/pxe",
+        text: _("Setting"),
         position: 10,
-        className: "OMV.module.admin.service.pxe.MenuConfig"
+        className: "OMV.module.admin.service.pxe.Setting"
 });
-*/
