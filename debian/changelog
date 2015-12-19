@@ -1,3 +1,9 @@
+openmediavault-pxe (1.7.2) stable; urgency=low
+
+  * Take over
+
+ -- Simon Pascal Baur <simonbaur@0rca.ch>  Sat, 19 Dec 2015 19:23:00 +0100
+
 openmediavault-pxe (1.7.1) stable; urgency=low
 
   * general update for testing

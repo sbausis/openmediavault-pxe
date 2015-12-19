@@ -73,18 +73,31 @@ syslinux() {
 		
 		if [ ! -f "/usr/share/syslinux/version" ] || [ "$(cat /usr/share/syslinux/version | awk -F' ' '{print $1}')" != "${VERSION}" ]; then
 			
-			local TMP=$(mktemp -d -t syslinux.XXXXXXXXXX)
-			wget -O ${TMP}/syslinux-${VERSION}.tar.gz http://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-${VERSION}.tar.gz
-
-			local SHASUM=$(wget -q -O - http://www.kernel.org/pub/linux/utils/boot/syslinux/sha256sums.asc | grep "syslinux-${VERSION}.tar.gz" | head -n 1 | awk -F " " '{print $1}')
-			[ "$(sha256sum ${TMP}/syslinux-${VERSION}.tar.gz | awk -F " " '{print $1}')" != "${SHASUM}" ] && exit 1
-
 			echo "$$" >/tmp/syslinux.install
 			
-			tar -xzf ${TMP}/syslinux-${VERSION}.tar.gz -C ${TMP}
-			(cd ${TMP}/syslinux-${VERSION} && make install && cp -f ${TMP}/syslinux-${VERSION}/version /usr/share/syslinux/version) 2>/dev/null
+			local TMP=$(mktemp -d -t syslinux.XXXXXXXXXX)
 			
-			rm -f /tmp/syslinux.install
+			local ARCH=$(uname -a | awk '{print $9}')
+			local FILENAME="pxe-syslinux_${VERSION}_${ARCH}.tar.gz"
+			local URL="http://UniverseNAS.0rca.ch/sources/${FILENAME}"
+			set +e
+			wget -O ${TMP}/${FILENAME} ${URL}
+			set -e
+			if [ -f "${TMP}/${FILENAME}" ]; then
+				tar -xzf "${TMP}/${FILENAME}" -C /usr/share
+			else
+				
+				wget -O ${TMP}/syslinux-${VERSION}.tar.gz http://www.kernel.org/pub/linux/utils/boot/syslinux/syslinux-${VERSION}.tar.gz
+
+				local SHASUM=$(wget -q -O - http://www.kernel.org/pub/linux/utils/boot/syslinux/sha256sums.asc | grep "syslinux-${VERSION}.tar.gz" | head -n 1 | awk -F " " '{print $1}')
+				[ "$(sha256sum ${TMP}/syslinux-${VERSION}.tar.gz | awk -F " " '{print $1}')" != "${SHASUM}" ] && exit 1
+
+				tar -xzf ${TMP}/syslinux-${VERSION}.tar.gz -C ${TMP}
+				(cd ${TMP}/syslinux-${VERSION} && make install && cp -f ${TMP}/syslinux-${VERSION}/version /usr/share/syslinux/version) 2>/dev/null
+				
+			fi
+			
+			rm -f ${TMP} /tmp/syslinux.install
 		fi
 		
 	fi

@@ -2,11 +2,12 @@ Source: openmediavault-pxe
 Section: net
 XB-Plugin-Section: network
 Priority: optional
-Maintainer: OpenMediaVault Plugin Developers <plugins@omv-extras.org>
+Maintainer: Simon Pascal Baur <simonbaur@0rca.ch>
 Build-Depends: debhelper (>= 9.0.0)
 Standards-Version: 3.9.3
+Homepage: http://0rca.ch/
 
 Package: openmediavault-pxe
 Architecture: all
-Depends: openmediavault (>= 1.0), ${misc:Depends}, syslinux-common, nasm, uuid-dev
+Depends: openmediavault (>= 2.1), ${misc:Depends}, syslinux-common, nasm, uuid-dev
 Description: pxe plugin for OpenMediaVault.
