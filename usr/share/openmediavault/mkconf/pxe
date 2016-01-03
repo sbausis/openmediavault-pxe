@@ -97,7 +97,7 @@ syslinux() {
 				
 			fi
 			
-			rm -f ${TMP} /tmp/syslinux.install
+			rm -Rf ${TMP} /tmp/syslinux.install
 		fi
 		
 	fi
