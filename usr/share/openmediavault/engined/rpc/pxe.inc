@@ -501,7 +501,7 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
 
         $objects = array();
 
-        $cmd = "ifconfig -a | grep 'inet' | cut -d: -f2 | awk {'print $1'}";
+        $cmd = "ifconfig -a | grep 'inet addr' | cut -d: -f2 | awk {'print $1'}";
         OMVUtil::exec($cmd, $result);
 
         foreach ($result as $address)
@@ -521,7 +521,7 @@ class OMVRpcServicePxe extends OMVRpcServiceAbstract
         }
 
         return $objects;
-    }    
+    }
 
 	public function updateSyslinux($params, $context)
 	{
